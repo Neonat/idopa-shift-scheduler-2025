@@ -1,18 +1,26 @@
-# iDopa — shift-scheduling prototype
+# iDopa
 
-A **HacknRoll 2025** prototype exploring worker availability and shift assignment. It contains a React weekday-selection interface and an independent Python scheduling experiment.
+A shift-scheduling prototype built for the HacknRoll 2025 hackathon with two experiments: a React interface for selecting a weekday and a Python script for finding a valid assignment.
 
-## What is built
+The browser and solver are independent. The repository captures the interface concept and constraint logic, with no API between them.
 
-The browser interface lets you select a day of the week and press **Upload** to display a confirmation alert. It does not upload availability data or request a generated schedule.
+[Try the interface](#try-the-interface) · [Run the solver](#run-the-solver) · [Stack and structure](#stack-and-structure)
 
-Separately, [`src/scheduler.py`](src/scheduler.py) searches a hard-coded example of four workers and four shifts. It checks worker availability, assigns exactly one worker to each shift and requires at least one assignment per worker, then prints the first valid schedule.
+## Current behaviour
 
-The React interface and Python solver are not connected. The repository records these two prototype pieces, rather than an operational scheduling service.
+The browser displays a list of weekdays. You can select a day and press **Upload** to show a confirmation alert. The button does not upload a file, store availability, or request a schedule, despite the alert's wording.
 
-## Run the interface
+The Python example defines four workers, four shifts, and each worker's availability in source. It enumerates candidate assignments and prints the first one that satisfies all three rules:
 
-You need Node.js/npm and a modern browser.
+- Each shift has exactly one worker.
+- Each worker receives at least one shift.
+- Every assigned shift is within that worker's availability.
+
+The script demonstrates feasibility checking. It has no fairness objective, input form, or file parser.
+
+## Try the interface
+
+Use Node.js with npm and a modern browser.
 
 ```sh
 git clone https://github.com/Neonat/idopa-shift-scheduler-2025.git
@@ -21,32 +29,48 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite, normally [localhost:5173](http://localhost:5173).
+Open the URL printed by Vite, normally [localhost:5173](http://localhost:5173). Select a weekday and click **Upload** to inspect the confirmation state.
 
-## Run the scheduling example
+## Run the solver
 
-Python 3 and its standard library are sufficient:
+Python 3 and its standard library are sufficient. From the repository root:
 
 ```sh
 python3 src/scheduler.py
 ```
 
-The exhaustive search is intended for this small demonstration; the script does not read browser selections or an uploaded file.
+A successful run prints `Valid schedule found:` followed by each worker's assigned shift. Change `workers`, `shifts`, and `availability` in [src/scheduler.py](src/scheduler.py) to explore the example. The exhaustive search materialises all binary assignment combinations, so its current design is for small inputs.
 
-## Build and preview
+## Stack and structure
+
+| Choice | Role in the prototype |
+| --- | --- |
+| React 18 and TSX components | Hold the selected-day and alert states and split the page into a list, header, button, and alert. |
+| Bootstrap 5 and application CSS | Style the list, controls, and confirmation. |
+| Vite 4 | Serve and bundle the interface. The build script does not run a separate TypeScript type check. |
+| Python and `itertools.product` | Express assignment constraints directly without a solver dependency. |
+
+| Location | Responsibility |
+| --- | --- |
+| [src/App.tsx](src/App.tsx) | Weekday list and alert visibility |
+| [src/components/](src/components/) | Interface components |
+| [src/App.css](src/App.css) | Application styling |
+| [src/scheduler.py](src/scheduler.py) | Standalone assignment search |
+| [vite.config.js](vite.config.js) | Frontend build configuration |
+
+There are no API credentials or environment variables to configure.
+
+## Build and development
 
 ```sh
 npm run build
 npm run preview
 ```
 
-The production files are written to `dist/`. Vite prints the preview URL. There is no automated test script in this prototype.
+Vite writes the production files to `dist/` and prints the preview URL. The project has no automated test script. To assess a solver change, check that the printed assignment respects availability and both assignment rules.
 
-## Source guide
+Connecting the interface to the solver would require an availability data contract and a way to execute Python. Neither exists in the current app.
 
-| Location | Purpose |
-| --- | --- |
-| [`src/App.tsx`](src/App.tsx) and [`src/components/`](src/components/) | Day selection and confirmation interface. |
-| [`src/App.css`](src/App.css) | Application styling; Bootstrap supplies shared component styles. |
-| [`src/scheduler.py`](src/scheduler.py) | Standalone shift-assignment example. |
-| [`vite.config.js`](vite.config.js) | React/Vite build configuration. |
+## License
+
+No project license is included.
